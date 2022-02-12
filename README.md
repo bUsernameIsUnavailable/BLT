@@ -1,7 +1,9 @@
 # Blueprint Library Tests
 
-[![MIT License][license-shield]][license-url]
-[![Stargazers][stars-shield]][stars-url]
+[![MIT License](https://img.shields.io/github/license/bUsernameIsUnavailable/BLT?style=for-the-badge)](https://github.com/bUsernameIsUnavailable/BLT/blob/master/LICENSE.md)
+[![Stargazers](https://img.shields.io/github/stars/bUsernameIsUnavailable/BLT?style=for-the-badge)](https://github.com/bUsernameIsUnavailable/BLT/stargazers)
+[![Network](https://img.shields.io/github/forks/bUsernameIsUnavailable/BLT?style=for-the-badge)](https://github.com/bUsernameIsUnavailable/BLT/network)
+[![Issues](https://img.shields.io/github/issues/bUsernameIsUnavailable/BLT?style=for-the-badge)](https://github.com/bUsernameIsUnavailable/BLT/issues)
 
 Developed with Unreal Engine 4.27.2
 
@@ -28,8 +30,3 @@ python -m pip install StringGenerator
 3. Run Unreal Engine and make sure that the Python Editor Script Plugin is enabled
 
 ![Python integration enabled](https://docs.unrealengine.com/4.27/Images/ProductionPipelines/ScriptingAndAutomation/Python/install-python-plugin.webp)
-
-[license-shield]: https://img.shields.io/github/license/bUsernameIsUnavailable/BLT?style=for-the-badge
-[license-url]: https://github.com/bUsernameIsUnavailable/BLT/blob/master/LICENSE.md
-[stars-shield]: https://img.shields.io/github/stars/bUsernameIsUnavailable/BLT?style=for-the-badge
-[stars-url]: https://github.com/bUsernameIsUnavailable/BLT/stargazers
