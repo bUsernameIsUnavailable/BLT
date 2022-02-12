@@ -2,6 +2,7 @@
 
 #include "BltBPLibrary.h"
 
+#include "FuzzingFlags.h"
 #include "Kismet/GameplayStatics.h"
 #include "PythonBridge.h"
 
@@ -74,6 +75,7 @@ TArray<AActor*> UBltBPLibrary::GetAllActorsOfClass(
 void UBltBPLibrary::ApplyFuzzing(
 	const UObject* const WorldContextObject,
 	const FString& FilePath,
+	const int32 Flags,
 	const TArray<AActor*>& AffectedActors,
 	const bool bUseArray
 )
@@ -101,7 +103,7 @@ void UBltBPLibrary::ApplyFuzzing(
 		for (AActor* const& Actor :
 			bUseArray ? AffectedActors : GetAllActorsOfClass(WorldContextObject, ActorClassName))
 		{
-			RandomiseProperties(Actor, JsonActorClassType, ActorClassProperties);
+			RandomiseProperties(Actor, JsonActorClassType, ActorClassProperties, Flags);
 		}
 	}
 }
@@ -109,17 +111,19 @@ void UBltBPLibrary::ApplyFuzzing(
 void UBltBPLibrary::K2ApplyFuzzing(
 	const UObject* const WorldContextObject,
 	const FString& FilePath,
+	const int32 Flags,
 	const TArray<AActor*>& AffectedActors,
 	const bool bUseArray
 )
 {
-	ApplyFuzzing(WorldContextObject, FilePath, AffectedActors, bUseArray);
+	ApplyFuzzing(WorldContextObject, FilePath, Flags, AffectedActors, bUseArray);
 }
 
 void UBltBPLibrary::RandomiseProperties(
 	AActor* const& Actor,
 	const UClass* const& JsonActorClassType,
-	const TMap<FString, TSharedPtr<FJsonValue>>& ActorClassProperties
+	const TMap<FString, TSharedPtr<FJsonValue>>& ActorClassProperties,
+	const int32 FuzzingFlags
 )
 {
 	if (!Actor)
@@ -128,6 +132,10 @@ void UBltBPLibrary::RandomiseProperties(
 	const UClass* const& ActorClass = Actor->GetClass();
 	if (!ActorClass->IsChildOf(JsonActorClassType))
 		return;
+
+	const bool& bIncludeBase = FuzzingFlags & static_cast<uint8>(EFuzzingFlags::IncludeBase);
+	const bool& bIncludeSuper = FuzzingFlags & static_cast<uint8>(EFuzzingFlags::IncludeSuper);
+	const bool& bIncludeNull = FuzzingFlags & static_cast<uint8>(EFuzzingFlags::IncludeNull);
 	
 	for (TFieldIterator<FProperty> Iterator(ActorClass); Iterator; ++Iterator)
 	{
@@ -136,9 +144,12 @@ void UBltBPLibrary::RandomiseProperties(
 		
 		if (!ActorClassProperties.Contains(PropertyName))
 		{
-			if (Property->GetOwnerClass()->IsChildOf(JsonActorClassType)) {
-				RandomiseNumericProperty(Actor, Property);
-				RandomiseStringProperty(Actor, Property);
+			const UClass* const& OwnerClass = Property->GetOwnerClass();
+			if (
+				bIncludeBase && OwnerClass == JsonActorClassType ||
+				bIncludeSuper && OwnerClass == JsonActorClassType->GetSuperClass()
+			) {
+				RandomisePropertiesDefault(Actor, Property);
 			}
 			continue;
 		}
@@ -153,17 +164,30 @@ void UBltBPLibrary::RandomiseProperties(
 		case EJson::String:
 			RandomiseStringProperty(Actor, Property, PropertyValue);
 			break;
-				
+
+		case EJson::Null:
+			if (bIncludeNull)
+			{
+				RandomisePropertiesDefault(Actor, Property);
+			}
+			break;
+			
 		default:
 			break;
 		}
 	}
 }
 
+void UBltBPLibrary::RandomisePropertiesDefault(AActor* const& Actor, const FProperty* const& Property)
+{
+	RandomiseNumericProperty(Actor, Property);
+	RandomiseStringProperty(Actor, Property);
+}
+
 void UBltBPLibrary::RandomiseNumericProperty(
-	AActor* const Actor,
-	const FProperty* const Property,
-	const FJsonValue* const PropertyValue
+	AActor* const& Actor,
+	const FProperty* const& Property,
+	const FJsonValue* const& PropertyValue
 )
 {
 	const TArray<TSharedPtr<FJsonValue>>& Interval = PropertyValue ?
@@ -195,9 +219,9 @@ void UBltBPLibrary::RandomiseNumericProperty(
 }
 
 void UBltBPLibrary::RandomiseStringProperty(
-	AActor* const Actor,
-	const FProperty* const Property,
-	const FJsonValue* const PropertyValue
+	AActor* const& Actor,
+	const FProperty* const& Property,
+	const FJsonValue* const& PropertyValue
 )
 {
 	const UPythonBridge* const PythonBridge = UPythonBridge::Get();

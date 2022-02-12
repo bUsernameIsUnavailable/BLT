@@ -8,10 +8,11 @@ DECLARE_LOG_CATEGORY_EXTERN(LogBlt, Log, All);
 
 
 UCLASS(Abstract)
-class UBltBPLibrary final : public UBlueprintFunctionLibrary
+class UBltBPLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
-	
+
+public:
 	static bool ParseJson(const FString& FilePath, TSharedPtr<FJsonObject>& OutObject);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Game Testing")
@@ -30,6 +31,7 @@ class UBltBPLibrary final : public UBlueprintFunctionLibrary
 	static void ApplyFuzzing(
 		const UObject* const WorldContextObject,
 		const FString& FilePath,
+		const int32 Flags,
 		const TArray<AActor*>& AffectedActors = TArray<AActor*>(),
 		const bool bUseArray = false
 	);
@@ -42,6 +44,7 @@ class UBltBPLibrary final : public UBlueprintFunctionLibrary
 	static void K2ApplyFuzzing(
 		const UObject* const WorldContextObject,
 		const FString& FilePath,
+		UPARAM(meta = (Bitmask, BitmaskEnum = "EFuzzingFlags")) const int32 Flags,
 		const TArray<AActor*>& AffectedActors,
 		const bool bUseArray = false
 	);
@@ -49,18 +52,21 @@ class UBltBPLibrary final : public UBlueprintFunctionLibrary
 	static void RandomiseProperties(
 		AActor* const& Actor,
 		const UClass* const& JsonActorClassType,
-		const TMap<FString, TSharedPtr<FJsonValue>>& ActorClassProperties
+		const TMap<FString, TSharedPtr<FJsonValue>>& ActorClassProperties,
+		const int32 FuzzingFlags
 	);
+
+	static void RandomisePropertiesDefault(AActor* const& Actor, const FProperty* const& Property);
 	
 	static void RandomiseNumericProperty(
-		AActor* const Actor,
-		const FProperty* const Property,
-		const FJsonValue* const PropertyValue = nullptr
+		AActor* const& Actor,
+		const FProperty* const& Property,
+		const FJsonValue* const& PropertyValue = nullptr
 	);
 	
 	static void RandomiseStringProperty(
-		AActor* const Actor,
-		const FProperty* const Property,
-		const FJsonValue* const PropertyValue = nullptr
+		AActor* const& Actor,
+		const FProperty* const& Property,
+		const FJsonValue* const& PropertyValue = nullptr
 	);
 };
